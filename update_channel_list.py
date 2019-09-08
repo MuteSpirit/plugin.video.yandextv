@@ -24,18 +24,18 @@ def main():
     channels = json.loads(channels)
     tv_channels = []
     for s in channels['set']:
-        content_url = get_channel_content_url(s, RESOLUTION)
-        if content_url:
-            tv_channels.append({
-                    'title': s['title'],
-                    # Channed icon
-                    'thumbnail': s['thumbnail'],    
-                    'content_url': content_url,
-                    # Needed to request episodes
-                    # 'content_id': s['content_id'],
-                    # debug
-                    # 'episodes': get_today_episodes(s['content_id']),
-                    })
+        # content_url = get_channel_content_url(s, RESOLUTION)
+        # if content_url:
+        tv_channels.append({
+                'title': s['title'],
+                # Channed icon
+                'thumbnail': 'https:{0}'.format(s['thumbnail']),
+                # 'content_url': content_url,
+                # Needed to request episodes
+                'content_id': s['content_id'],
+                # debug
+                # 'episodes': get_today_episodes(s['content_id']),
+                })
         # break  # debug
     with open(TV_FILE, 'w') as tvfo:
         json.dump(tv_channels, tvfo)
