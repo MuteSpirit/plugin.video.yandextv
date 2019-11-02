@@ -14,6 +14,9 @@ $(ADDON_NAME).$(ADDON_VERSION).zip: ${ADDON_FILES}
 tv.json: update_channel_list.py
 	python update_channel_list.py
 
+dp: $(ADDON_NAME).$(ADDON_VERSION).zip
+	scp build/$(ADDON_NAME).$(ADDON_VERSION).zip xbian@192.168.0.102:~/
+
 clean:
 	rm -rf build/
 	rm $(ADDON_CHANNELS_FILE)

@@ -30,7 +30,7 @@ def main():
                 'title': s['title'],
                 # Channed icon
                 'thumbnail': 'https:{0}'.format(s['thumbnail']),
-                # 'content_url': content_url,
+                'live_broadcast_url': s['streams'][0]['url'],
                 # Needed to request episodes
                 'content_id': s['content_id'],
                 # debug

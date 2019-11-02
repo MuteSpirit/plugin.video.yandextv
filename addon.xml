@@ -12,11 +12,11 @@
     </extension>
     <extension point="xbmc.addon.metadata">
         <summary lang="en">Yandex TV Plugin</summary>
-        <description lang="en_GB">Watch TV streams from Yandex main page.</description>
+        <description lang="en_GB">Watch TV streams from Yandex main page</description>
         <disclaimer lang="en_GB">Strongly experimental and unofficial!</disclaimer>
         <news>With cached channels list</news>
         <language>en</language>
-        <platform>linux</platform>
+        <platform>all</platform>
         <license>MIT</license>
         <forum></forum>
         <website>https://github.com/J2TEAM-dev/Kodi-XBMC-plugin-boilerplate</website>

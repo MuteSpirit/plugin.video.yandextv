@@ -12,6 +12,7 @@ import time
 import datetime
 from urllib2 import urlopen
 from urlparse import urlparse
+import re
 
 YANDEX_TV_URL_PREFIX = 'https://strm.yandex.ru'
 RESOLUTION = '720p'
@@ -38,7 +39,7 @@ def main(paramstring):
         if params['action'] == 'play':
             play_video(params['video'])
         elif params['action'] == 'episodes':
-            list_today_episodes(params['content_id'])
+            list_today_episodes(params['live_broadcast_url'], params['content_id'])
         else:
             raise ValueError('Invalid paramstring: {0}!'.format(paramstring))
     else:
@@ -48,8 +49,8 @@ def main(paramstring):
         list_channels(get_channels())
 
 
-def play_video(path):
-    play_item = xbmcgui.ListItem(path=get_content_url(path, RESOLUTION).strip())
+def play_video(url):
+    play_item = xbmcgui.ListItem(url=get_content_url(url, xbmcgui.getScreenHeight()).strip())
     xbmcplugin.setResolvedUrl(PLUGIN_HANDLE, True, listitem=play_item)
 
 def get_channels():
@@ -71,7 +72,7 @@ def list_channels(channels):
 
         it.setProperty('content_id', channel['content_id'])
 
-        url = get_url(action='episodes', content_id=channel['content_id'])
+        url = get_url(action='episodes', content_id=channel['content_id'], live_broadcast_url=channel['live_broadcast_url'])
 
         list_items.append((url, it, its_folder))
 
@@ -84,7 +85,7 @@ def get_url(**kwargs):
     return '{0}?{1}'.format(KODI_BASE_URL, urlencode(kwargs))
 
 
-def list_today_episodes(content_id):
+def list_today_episodes(live_broadcast_url, content_id):
     # url = 'https://frontend.vh.yandex.ru/v23/episodes.json?parent_id={parent_id}&start_date__to={now}&end_date__from={now}&locale=ru&from=videohub&service=ya-main&disable_trackings=1'
     #
     # Receive all available episodes, because i did not understand how receive for concrete day
@@ -103,17 +104,29 @@ def list_today_episodes(content_id):
         episodes = json.loads(body)
         # print(episodes)
 
-        list_items = []
-        for episode in episodes['set']:
-            title = u'{} {}'.format(datetime.datetime.fromtimestamp(episode['start_time']), episode['title'])
+        it = xbmcgui.ListItem(label='Прямой эфир')
+        it.setProperty('IsPlayable', 'true')
+        it.setIsFolder(False)
+        url = get_url(action='play', video=live_broadcast_url)
 
+        list_items = [(it, url), ]
+
+        for episode in episodes['set']:
+            title = u'{}{}{}'.format(datetime.datetime.fromtimestamp(episode['start_time']), os.linesep, episode['title'])
+            genre = episode['adConfig']['video_genre_name']
+            if genre:
+                genre = genre[0]
             it = xbmcgui.ListItem(label=title)
 
             it.setInfo('video', {
                 'title': title,
+                'mediatype': 'video',
+                'genre': genre,
                 'duration': int(episode['end_time'] - episode['start_time']),
                 'plotoutline': episode.get('description', ''),
-                'mediatype': 'video'
+                'plot': episode.get('description', ''),
+                'playcount': episode.get('views_count', 0),
+                'release_date': str(datetime.datetime.fromtimestamp(episode['release_date']))
                 })
 
             thumb = 'https:{0}'.format(episode['thumbnail'])
@@ -146,11 +159,17 @@ def get_content_url(m3u8_url, resolution):
 
     try:
         response = urlopen(m3u8_url)
+        resolution_re = re.compile(r'RESOLUTION=\d+*x{}'.format(resolution))
+        try_url = False
         for l in response:
             if l[0] == '#':
+                if resolution_re.search(l):
+                    try_url = True
+                else:
+                    try_url = False
                 continue
 
-            if l.find(resolution) > -1:
+            if try_url:
                 if l[0] != '/':
                     content_url = l
                 else:
